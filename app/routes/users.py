@@ -1,33 +1,29 @@
 from fastapi import APIRouter
+from app.schemas.user import UserCreate
 
 router = APIRouter(
     prefix="/users",
     tags=["Users"]
 )
 
-users = [
-    {
-        "id": 1,
-        "name": "John Doe",
-        "email": "john@example.com"
-    },
-    {
-        "id": 2,
-        "name": "Jane Smith",
-        "email": "jane@example.com"
-    }
-]
+users = []
 
 @router.get("/")
 def get_users():
     return users
 
-@router.get("/{user_id}")
-def get_user(user_id: int):
-    for user in users:
-        if user["id"] == user_id:
-            return user
+@router.post("/")
+def create_user(user: UserCreate):
+
+    new_user = {
+        "id": len(users) + 1,
+        "name": user.name,
+        "email": user.email
+    }
+
+    users.append(new_user)
 
     return {
-        "error": "User not found"
-      }
+        "message": "User created successfully",
+        "user": new_user
+    }
