@@ -1,23 +1,42 @@
 from fastapi import FastAPI
-from app.routes.users import router as users_router
+
+from core.config import settings
+from core.exceptions import register_exception_handlers
+from core.lifespan import lifespan
+from core.middleware import register_middleware
+
+from routes.health import router as health_router
+from routes.users import router as users_router
+
 
 app = FastAPI(
-    title="x402 API",
-    description="Professional REST API built with FastAPI",
-    version="1.0.0"
+    title=settings.APP_NAME,
+    description=settings.SERVICE_DESCRIPTION,
+    version=settings.APP_VERSION,
+    debug=settings.DEBUG,
+    lifespan=lifespan,
 )
 
-app.include_router(users_router)
+register_middleware(app)
+register_exception_handlers(app)
 
-@app.get("/")
-def root():
-    return {
-        "message": "Welcome to x402 API",
-        "version": "1.0.0"
-    }
+app.include_router(
+    health_router,
+    prefix=settings.API_PREFIX,
+)
 
-@app.get("/health")
-def health():
+app.include_router(
+    users_router,
+    prefix=settings.API_PREFIX,
+)
+
+
+@app.get("/", tags=["Root"])
+async def root():
+
     return {
-        "status": "healthy"
+        "service": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "environment": settings.ENVIRONMENT,
+        "status": "running",
     }
